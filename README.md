@@ -13,7 +13,7 @@ All source downloads use public upstream locations. No private registry or SSH k
 | `x64-linux` | `ubuntu-24.04` | `x64-linux` | `x64-linux` | Default GCC in the image | Default |
 
 Windows jobs reuse preinstalled MSVC through `microsoft/setup-msbuild` and
-`gha-setup-vsdevenv`; these actions do not install compilers. The v142 profile
+`scripts/msvc-env.ps1`, which calls `vcvarsall.bat`; neither installs compilers. The v142 profile
 uses `triplets/x64-windows-v142.cmake` to pin MSVC v142 and Windows 7 API flags.
 Other profiles use vcpkg's built-in triplets without overrides.
 Release and Debug libraries are built. The static Windows target requests static
