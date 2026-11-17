@@ -1,0 +1,198 @@
+{
+  "name": "prebuilt-public-dependencies",
+  "version": "1.0.0",
+  "dependencies": [
+    "glm",
+    "glew",
+    "benchmark",
+    "cmakerc",
+    "gtest",
+    "spdlog",
+    "fmt",
+    "backward-cpp",
+    "gflags",
+    "soundtouch",
+    "rapidxml-ns",
+    "rapidjson",
+    "simdjson",
+    "nlohmann-json",
+    "c-ares",
+    "openssl",
+    "vulkan",
+    "gmssl",
+    "pthread",
+    "cppzmq",
+    "glaze",
+    "boost-asio",
+    "boost-beast",
+    "boost-uuid",
+    "boost-lockfree",
+    "boost-filesystem",
+    "bext-sml",
+    "boost-program-options",
+    "libde265",
+    {
+      "name": "glslang",
+      "host": true,
+      "features": [
+        "tools"
+      ]
+    },
+    {
+      "name": "boost-locale",
+      "platform": "!android"
+    },
+    {
+      "name": "log4cxx",
+      "features": [
+        "mprfa"
+      ]
+    },
+    {
+      "name": "protobuf",
+      "features": [
+        "zlib"
+      ]
+    },
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": [
+        "png",
+        "fs",
+        "ffmpeg",
+        "world"
+      ]
+    },
+    {
+      "name": "ffmpeg",
+      "default-features": false,
+      "features": [
+        "avcodec",
+        "avformat",
+        "swresample",
+        "vulkan"
+      ]
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "vaapi"
+      ],
+      "platform": "linux"
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "qsv"
+      ],
+      "platform": "(windows | linux) & (x64 | x86) & !uwp"
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "nvcodec"
+      ],
+      "platform": "linux | (!osx & !uwp & !(arm64 & windows))"
+    },
+    {
+      "name": "libhv",
+      "features": [
+        "ssl"
+      ]
+    },
+    {
+      "name": "ireader-media-server",
+      "default-features": false,
+      "features": [
+        "mpeg"
+      ]
+    },
+    "ireader-sdk"
+  ],
+  "default-features": [
+    "qt5"
+  ],
+  "features": {
+    "qt5": {
+      "description": "enable qt5 libraries",
+      "dependencies": [
+        {
+          "name": "qt5-base",
+          "default-features": false,
+          "features": [
+            "openssl",
+            "sqlite3plugin",
+            "vulkan"
+          ]
+        },
+        {
+          "name": "qt5-multimedia",
+          "default-features": false
+        },
+        {
+          "name": "qt5-networkauth"
+        },
+        {
+          "name": "qt5-translations"
+        },
+        {
+          "name": "qt5-wayland",
+          "platform": "linux"
+        },
+        {
+          "name": "qt5-websockets",
+          "default-features": false
+        },
+        {
+          "name": "qt5-tools",
+          "default-features": false
+        },
+        {
+          "name": "qt5-tools",
+          "default-features": false,
+          "host": true
+        }
+      ]
+    },
+    "qt6": {
+      "description": "enable qt6 libraries",
+      "dependencies": [
+        {
+          "name": "qtbase",
+          "features": [
+            "vulkan"
+          ]
+        },
+        {
+          "name": "qtbase",
+          "features": [
+            "windeployqt"
+          ],
+          "platform": "windows"
+        },
+        {
+          "name": "qtbase",
+          "features": [
+            "wayland"
+          ],
+          "platform": "linux | osx"
+        },
+        {
+          "name": "qttools",
+          "default-features": false,
+          "features": [
+            "designer",
+            "linguist"
+          ],
+          "host": true
+        },
+        "qtlottie",
+        "qtmultimedia",
+        "qtnetworkauth",
+        "qtshadertools",
+        "qttranslations"
+      ]
+    }
+  }
+}

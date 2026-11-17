@@ -1,0 +1,51 @@
+diff --git a/src/ip.cpp b/src/ip.cpp
+index 98804e8..a39c9c3 100644
+--- a/src/ip.cpp
++++ b/src/ip.cpp
+@@ -65,6 +65,30 @@ static const char *tmp_env_vars[] = {
+ };
+ #endif
+ 
++#ifdef ZMQ_HAVE_WINDOWS
++static bool wsa_no_handle_inherit_supported() {
++    static const bool result = []() -> bool {
++        HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
++        if (!ntdll) return false;
++
++        typedef LONG (WINAPI *RtlGetVersionFn)(PRTL_OSVERSIONINFOW);
++        RtlGetVersionFn rtl_get_version = reinterpret_cast<RtlGetVersionFn>(GetProcAddress(ntdll, "RtlGetVersion"));
++        if (!rtl_get_version) return false;
++
++        RTL_OSVERSIONINFOW version = {};
++        version.dwOSVersionInfoSize = sizeof(version);
++        if (rtl_get_version(&version) != 0) return false;
++
++        // WSA_FLAG_NO_HANDLE_INHERIT requires Windows 7 SP1 or later.
++        if (version.dwMajorVersion > 6) return true;
++        if (version.dwMajorVersion == 6 && version.dwMinorVersion > 1) return true;
++        return version.dwMajorVersion == 6 && version.dwMinorVersion == 1 && version.dwBuildNumber >= 7601;
++    }();
++
++    return result;
++}
++#endif
++
+ zmq::fd_t zmq::open_socket (int domain_, int type_, int protocol_)
+ {
+     int rc;
+@@ -75,11 +99,12 @@ zmq::fd_t zmq::open_socket (int domain_, int type_, int protocol_)
+     type_ |= SOCK_CLOEXEC;
+ #endif
+ 
+-#if defined ZMQ_HAVE_WINDOWS && defined WSA_FLAG_NO_HANDLE_INHERIT
++#if defined ZMQ_HAVE_WINDOWS
+     // if supported, create socket with WSA_FLAG_NO_HANDLE_INHERIT, such that
+     // the race condition in making it non-inheritable later is avoided
+-    const fd_t s = WSASocket (domain_, type_, protocol_, NULL, 0,
+-                              WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT);
++    DWORD flags = WSA_FLAG_OVERLAPPED;
++    if (wsa_no_handle_inherit_supported()) { flags |= WSA_FLAG_NO_HANDLE_INHERIT; }
++    const fd_t s = WSASocket (domain_, type_, protocol_, NULL, 0, flags);
+ #else
+     const fd_t s = socket (domain_, type_, protocol_);
+ #endif

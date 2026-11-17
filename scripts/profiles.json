@@ -1,0 +1,34 @@
+[
+  {
+    "profile": "x64-windows-latest",
+    "os": "windows-latest",
+    "triplet": "x64-windows",
+    "host_triplet": "x64-windows",
+    "manifest": "manifests/default",
+    "toolset": ""
+  },
+  {
+    "profile": "x64-windows-v142",
+    "os": "windows-2022",
+    "triplet": "x64-windows-v142",
+    "host_triplet": "x64-windows-v142",
+    "manifest": "manifests/win7",
+    "toolset": "14.29"
+  },
+  {
+    "profile": "x64-windows-static",
+    "os": "windows-latest",
+    "triplet": "x64-windows-static",
+    "host_triplet": "x64-windows",
+    "manifest": "manifests/default",
+    "toolset": ""
+  },
+  {
+    "profile": "x64-linux",
+    "os": "ubuntu-24.04",
+    "triplet": "x64-linux",
+    "host_triplet": "x64-linux",
+    "manifest": "manifests/default",
+    "toolset": ""
+  }
+]

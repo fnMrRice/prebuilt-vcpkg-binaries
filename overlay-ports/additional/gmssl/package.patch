@@ -1,0 +1,148 @@
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -703,7 +703,9 @@
+ SET_TARGET_PROPERTIES(gmssl PROPERTIES VERSION 3.2 SOVERSION 3)
+ 
+ 
+-install(TARGETS gmssl ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
++install(TARGETS gmssl EXPORT gmsslConfig ARCHIVE DESTINATION lib LIBRARY DESTINATION lib RUNTIME DESTINATION bin)
++target_include_directories(gmssl INTERFACE $<INSTALL_INTERFACE:include>)
++install(EXPORT gmsslConfig DESTINATION lib/cmake/gmssl)
+ install(DIRECTORY ${CMAKE_SOURCE_DIR}/include/gmssl DESTINATION include)
+ 
+ if(UNIX AND NOT APPLE AND BUILD_SHARED_LIBS)
+@@ -724,19 +726,13 @@
+ 		target_link_libraries(gmssl-bin PRIVATE Ws2_32)
+ 	endif()
+ 
+-	enable_testing()
+-	foreach(name ${tests})
+-		add_test(NAME ${name} COMMAND ${name}test)
+-		add_executable(${name}test tests/${name}test.c)
+-		target_link_libraries (${name}test LINK_PUBLIC gmssl)
+-	endforeach()
++	# Tests are not part of the vcpkg package.
+ 
+ 	install(TARGETS gmssl-bin RUNTIME DESTINATION bin)
+ endif()
+ 
+ if (CMAKE_C_COMPILER_ID MATCHES "MSVC")
+ 	set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT gmssl-bin)
+-	set(CMAKE_INSTALL_PREFIX "C:/Program Files/GmSSL") # change by `cmake -DCMAKE_INSTALL_PREFIX=C:\path\to\install`
+ 	# run `set path=%path%;C:\Program Files\GmSSL\bin`
+ 	add_compile_definitions(_CRT_SECURE_NO_WARNINGS)
+ 
+@@ -747,113 +743,6 @@
+ #	target_compile_options(gmssl-bin PRIVATE /wd4996)
+ endif()
+ 
+-
+-add_test(NAME tool_sm3 COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_sm3.cmake")
+-add_test(NAME tool_sm2 COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_sm2.cmake")
+-add_test(NAME tool_rand COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_rand.cmake")
+-add_test(NAME tool_sm4 COMMAND ${CMAKE_COMMAND}
+-	-DENABLE_SM4_ECB=${ENABLE_SM4_ECB}
+-	-DENABLE_SM4_CFB=${ENABLE_SM4_CFB}
+-	-DENABLE_SM4_OFB=${ENABLE_SM4_OFB}
+-	-DENABLE_SM4_CCM=${ENABLE_SM4_CCM}
+-	-DENABLE_SM4_XTS=${ENABLE_SM4_XTS}
+-	-DENABLE_SM4_CBC_MAC=${ENABLE_SM4_CBC_MAC}
+-	-P "${CMAKE_SOURCE_DIR}/cmake/tool_sm4.cmake")
+-if(ENABLE_ZUC)
+-	add_test(NAME tool_zuc COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_zuc.cmake")
+-endif()
+-if(ENABLE_GHASH)
+-	add_test(NAME tool_ghash COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_ghash.cmake")
+-endif()
+-if(ENABLE_SM9)
+-	add_test(NAME tool_sm9 COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_sm9.cmake")
+-endif()
+-if(ENABLE_LMS OR ENABLE_XMSS OR ENABLE_SPHINCS OR ENABLE_KYBER)
+-	add_test(NAME tool_pqc COMMAND ${CMAKE_COMMAND}
+-		-DENABLE_LMS=${ENABLE_LMS}
+-		-DENABLE_XMSS=${ENABLE_XMSS}
+-		-DENABLE_SPHINCS=${ENABLE_SPHINCS}
+-		-DENABLE_KYBER=${ENABLE_KYBER}
+-		-P "${CMAKE_SOURCE_DIR}/cmake/tool_pqc.cmake")
+-endif()
+-add_test(NAME tool_cert COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_cert.cmake")
+-set_tests_properties(tool_cert PROPERTIES FIXTURES_SETUP gmssl_cert_files)
+-add_test(NAME tool_crl COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_crl.cmake")
+-add_test(NAME tool_ocsp COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_ocsp.cmake")
+-set_tests_properties(tool_crl tool_ocsp PROPERTIES FIXTURES_REQUIRED gmssl_cert_files)
+-if(ENABLE_CMS)
+-	add_test(NAME tool_cms COMMAND ${CMAKE_COMMAND} -P "${CMAKE_SOURCE_DIR}/cmake/tool_cms.cmake")
+-	set_tests_properties(tool_cms PROPERTIES FIXTURES_REQUIRED gmssl_cert_files)
+-endif()
+-if(ENABLE_TLS AND NOT WIN32)
+-	find_program(OPENSSL_EXECUTABLE openssl)
+-	set(GMSSL_OPENSSL_INTEROP_ENABLED OFF)
+-	if(ENABLE_AES AND ENABLE_SHA2 AND ENABLE_SECP256R1)
+-		set(GMSSL_OPENSSL_INTEROP_ENABLED ON)
+-	else()
+-		message(STATUS "OpenSSL TLS interop tests require ENABLE_AES=ON, ENABLE_SHA2=ON and ENABLE_SECP256R1=ON; skipping")
+-	endif()
+-	add_test(NAME tool_tlcp_sm4_gcm_sni COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tlcp_sm4_gcm_sni -P "${CMAKE_SOURCE_DIR}/cmake/tlcp_commands.cmake")
+-	add_test(NAME tool_tlcp_sm4_cbc_sni COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tlcp_sm4_cbc_sni -P "${CMAKE_SOURCE_DIR}/cmake/tlcp_commands.cmake")
+-	add_test(NAME tool_tlcp_sm4_gcm_client_cert COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tlcp_sm4_gcm_client_cert -P "${CMAKE_SOURCE_DIR}/cmake/tlcp_commands.cmake")
+-	add_test(NAME tool_tls12_sm4_gcm_sni COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls12_sm4_gcm_sni -P "${CMAKE_SOURCE_DIR}/cmake/tls12_commands.cmake")
+-	add_test(NAME tool_tls12_sm4_cbc_sni COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls12_sm4_cbc_sni -P "${CMAKE_SOURCE_DIR}/cmake/tls12_commands.cmake")
+-	add_test(NAME tool_tls12_sm4_gcm_client_cert COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls12_sm4_gcm_client_cert -P "${CMAKE_SOURCE_DIR}/cmake/tls12_commands.cmake")
+-	add_test(NAME tool_tls12_sm4_gcm_renegotiation_info COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls12_sm4_gcm_renegotiation_info -P "${CMAKE_SOURCE_DIR}/cmake/tls12_commands.cmake")
+-	add_test(NAME tool_tls12_sm4_gcm_renegotiation_info_scsv COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls12_sm4_gcm_renegotiation_info_scsv -P "${CMAKE_SOURCE_DIR}/cmake/tls12_commands.cmake")
+-	add_test(NAME tool_tls12_client_reject_renegotiation_info_both
+-		COMMAND bash -c "bin/gmssl tls12_client -host 127.0.0.1 -renegotiation_info -renegotiation_info_scsv > tls12_client_reject_renegotiation_info_both.log 2>&1; test $? -ne 0 && grep -q 'should not be used together' tls12_client_reject_renegotiation_info_both.log")
+-	add_test(NAME tool_tls13_sm4_gcm_sni COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls13_sm4_gcm_sni -P "${CMAKE_SOURCE_DIR}/cmake/tls13_commands.cmake")
+-	add_test(NAME tool_tls13_sm4_gcm_client_cert COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls13_sm4_gcm_client_cert -P "${CMAKE_SOURCE_DIR}/cmake/tls13_commands.cmake")
+-	add_test(NAME tool_tls13_hrr_sm4_gcm COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls13_hrr_sm4_gcm -P "${CMAKE_SOURCE_DIR}/cmake/tls13_commands.cmake")
+-	add_test(NAME tool_tls13_psk_dhe_sm4_gcm COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls13_psk_dhe_sm4_gcm -P "${CMAKE_SOURCE_DIR}/cmake/tls13_commands.cmake")
+-	add_test(NAME tool_tls13_psk_only_sm4_gcm COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls13_psk_only_sm4_gcm -P "${CMAKE_SOURCE_DIR}/cmake/tls13_commands.cmake")
+-	add_test(NAME tool_tls13_early_data_sm4_gcm COMMAND ${CMAKE_COMMAND} -DTEST_CASE=tls13_early_data_sm4_gcm -P "${CMAKE_SOURCE_DIR}/cmake/tls13_commands.cmake")
+-	set_tests_properties(
+-		tool_tlcp_sm4_gcm_sni
+-		tool_tlcp_sm4_cbc_sni
+-		tool_tlcp_sm4_gcm_client_cert
+-		tool_tls12_sm4_gcm_sni
+-		tool_tls12_sm4_cbc_sni
+-		tool_tls12_sm4_gcm_client_cert
+-		tool_tls12_sm4_gcm_renegotiation_info
+-		tool_tls12_sm4_gcm_renegotiation_info_scsv
+-		tool_tls13_sm4_gcm_sni
+-		tool_tls13_sm4_gcm_client_cert
+-		tool_tls13_hrr_sm4_gcm
+-		tool_tls13_psk_dhe_sm4_gcm
+-		tool_tls13_psk_only_sm4_gcm
+-		tool_tls13_early_data_sm4_gcm
+-		PROPERTIES FIXTURES_REQUIRED gmssl_cert_files)
+-	if(OPENSSL_EXECUTABLE AND GMSSL_OPENSSL_INTEROP_ENABLED)
+-		add_test(NAME tool_tls12_openssl_server COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls12_openssl_server -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls12_openssl_server_renegotiation_info COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls12_openssl_server_renegotiation_info -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls12_openssl_server_renegotiation_info_scsv COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls12_openssl_server_renegotiation_info_scsv -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls12_openssl_client COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls12_openssl_client -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_openssl_server COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_openssl_server -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_openssl_client COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_openssl_client -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_hrr_openssl_client COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_hrr_openssl_client -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_psk_dhe_openssl_server COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_psk_dhe_openssl_server -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_psk_dhe_openssl_client COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_psk_dhe_openssl_client -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_psk_only_openssl_server COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_psk_only_openssl_server -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		add_test(NAME tool_tls13_psk_only_openssl_client COMMAND ${CMAKE_COMMAND} -DOPENSSL_EXECUTABLE=${OPENSSL_EXECUTABLE} -DTEST_CASE=tls13_psk_only_openssl_client -P "${CMAKE_SOURCE_DIR}/cmake/openssl_interop_commands.cmake")
+-		set_tests_properties(
+-			tool_tls12_openssl_server
+-			tool_tls12_openssl_server_renegotiation_info
+-			tool_tls12_openssl_server_renegotiation_info_scsv
+-			tool_tls12_openssl_client
+-			tool_tls13_openssl_server
+-			tool_tls13_openssl_client
+-			tool_tls13_hrr_openssl_client
+-			tool_tls13_psk_dhe_openssl_server
+-			tool_tls13_psk_dhe_openssl_client
+-			tool_tls13_psk_only_openssl_server
+-			tool_tls13_psk_only_openssl_client
+-			PROPERTIES FIXTURES_REQUIRED gmssl_cert_files)
+-	elseif(NOT OPENSSL_EXECUTABLE)
+-		message(STATUS "openssl executable not found; skipping OpenSSL TLS interop tests")
+-	endif()
+-endif()
+ 
+ # Generate install package with cpack
+ #	cpack -G TGZ

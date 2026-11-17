@@ -1,0 +1,41 @@
+{
+  "name": "ireader-sdk",
+  "version-string": "git-e84a3d1a91cacdd8dedbbc931a2886b99bec4846",
+  "description": "portable system call(aio/socket/thread/process/lock/event/pipe)",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "default-features": [
+    "aio",
+    "http",
+    "ice"
+  ],
+  "features": {
+    "aio": {
+      "description": "libaio"
+    },
+    "http": {
+      "description": "libhttp",
+      "dependencies": [
+        {
+          "name": "ireader-sdk",
+          "default-features": false,
+          "features": [
+            "aio"
+          ]
+        }
+      ]
+    },
+    "ice": {
+      "description": "libice"
+    }
+  }
+}

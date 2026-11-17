@@ -1,0 +1,118 @@
+{
+  "name": "prebuilt-public-dependencies",
+  "version": "1.0.0",
+  "dependencies": [
+    "glm",
+    "glew",
+    "cmakerc",
+    "gtest",
+    "spdlog",
+    "fmt",
+    "backward-cpp",
+    "gflags",
+    "soundtouch",
+    "rapidxml-ns",
+    "rapidjson",
+    "simdjson",
+    "nlohmann-json",
+    "c-ares",
+    "openssl",
+    "gmssl",
+    "pthread",
+    "cppzmq",
+    "boost-asio",
+    "boost-beast",
+    "boost-uuid",
+    "boost-lockfree",
+    "boost-filesystem",
+    "bext-sml",
+    "boost-program-options",
+    "libde265",
+    {
+      "name": "boost-locale",
+      "platform": "!android"
+    },
+    {
+      "name": "protobuf",
+      "features": [
+        "zlib"
+      ]
+    },
+    {
+      "name": "opencv4",
+      "default-features": false,
+      "features": [
+        "png",
+        "fs",
+        "ffmpeg",
+        "world"
+      ]
+    },
+    {
+      "name": "ffmpeg",
+      "default-features": false,
+      "features": [
+        "avcodec",
+        "avformat",
+        "swresample",
+        "qsv"
+      ]
+    },
+    {
+      "name": "libhv",
+      "features": [
+        "ssl"
+      ]
+    },
+    {
+      "name": "ireader-media-server",
+      "default-features": false,
+      "features": [
+        "mpeg"
+      ]
+    },
+    {
+      "name": "qt5-base",
+      "default-features": false,
+      "features": [
+        "openssl",
+        "sqlite3plugin"
+      ]
+    },
+    {
+      "name": "qt5-multimedia",
+      "default-features": false
+    },
+    {
+      "name": "qt5-networkauth"
+    },
+    {
+      "name": "qt5-translations"
+    },
+    {
+      "name": "qt5-wayland",
+      "platform": "linux"
+    },
+    {
+      "name": "qt5-websockets",
+      "default-features": false
+    },
+    {
+      "name": "qt5-tools",
+      "default-features": false
+    },
+    {
+      "name": "qt5-tools",
+      "default-features": false,
+      "host": true
+    },
+    "ireader-sdk"
+  ],
+  "overrides": [
+    {
+      "name": "ffmpeg",
+      "version": "7.1.2",
+      "port-version": 5
+    }
+  ]
+}

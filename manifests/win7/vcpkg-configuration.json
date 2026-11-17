@@ -1,0 +1,21 @@
+{
+  "default-registry": {
+    "kind": "builtin",
+    "baseline": "9f8f0c7bfa1a8f393cd4da3f49c1163d7daa774f"
+  },
+  "registries": [
+    {
+      "kind": "git",
+      "repository": "https://github.com/microsoft/vcpkg.git",
+      "baseline": "caa7579a1c48e2ca770f6ccf98cb03db95642631",
+      "packages": [
+        "boost",
+        "boost-*"
+      ]
+    }
+  ],
+  "overlay-ports": [
+    "../../overlay-ports/additional",
+    "../../overlay-ports/win7-rtm-workaround"
+  ]
+}

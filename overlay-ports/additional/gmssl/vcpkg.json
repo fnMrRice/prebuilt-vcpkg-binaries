@@ -1,0 +1,17 @@
+{
+  "name": "gmssl",
+  "version": "3.2.0",
+  "description": "Chinese cryptographic standards SM2, SM3, SM4, SM9 and TLS",
+  "homepage": "https://github.com/guanzhi/GmSSL",
+  "license": "Apache-2.0",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

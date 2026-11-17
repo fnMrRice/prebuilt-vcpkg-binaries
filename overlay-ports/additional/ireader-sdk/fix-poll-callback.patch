@@ -1,0 +1,54 @@
+--- a/libhttp/source/http-client-connection-poll.c
++++ b/libhttp/source/http-client-connection-poll.c
+@@ -52,6 +52,7 @@
+     } recv;
+ };
+ 
++static void http_poll_transport_onconnect_callback(void* c, int event);
+ static void http_poll_transport_onread(void* c, int event);
+ static void http_poll_transport_onwrite(void* c, int event);
+ 
+@@ -176,7 +177,7 @@
+         if (ETIMEDOUT == r && now - tcp->send.clock < tcp->conn_timeout)
+         {
+             priv = (struct http_poll_transport_priv_t*)tcp->transport->priv;
+-            return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_WRITE, tcp->conn_timeout - (int)(now - tcp->send.clock), http_poll_transport_onconnect);
++            return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_WRITE, tcp->conn_timeout - (int)(now - tcp->send.clock), http_poll_transport_onconnect_callback);
+         }
+         else if (0 != r)
+         {
+@@ -237,11 +238,11 @@
+             r = SSL_get_error(tcp->ssl, r);
+             if (r == SSL_ERROR_WANT_WRITE)
+             {
+-                return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_WRITE, tcp->conn_timeout - (int)(now - tcp->send.clock), http_poll_transport_onconnect);
++                return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_WRITE, tcp->conn_timeout - (int)(now - tcp->send.clock), http_poll_transport_onconnect_callback);
+             }
+             else if (r == SSL_ERROR_WANT_READ)
+             {
+-                return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_READ, tcp->conn_timeout - (int)(now - tcp->send.clock), http_poll_transport_onconnect);
++                return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_READ, tcp->conn_timeout - (int)(now - tcp->send.clock), http_poll_transport_onconnect_callback);
+             }
+             else
+             {
+@@ -260,6 +261,11 @@
+ 
+     (void)event;
+     return 0;
++}
++
++static void http_poll_transport_onconnect_callback(void* c, int event)
++{
++    (void)http_poll_transport_onconnect(c, event);
+ }
+ 
+ static void http_poll_transport_onread(void* c, int event)
+@@ -316,7 +322,7 @@
+ #endif
+             {
+                 priv = (struct http_poll_transport_priv_t*)tcp->transport->priv;
+-                return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_WRITE, tcp->conn_timeout, http_poll_transport_onconnect);
++                return priv->poll(priv->param, tcp, tcp->socket, HTTP_TRANSPORT_POLL_WRITE, tcp->conn_timeout, http_poll_transport_onconnect_callback);
+             }
+             else
+             {

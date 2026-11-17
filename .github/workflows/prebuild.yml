@@ -1,0 +1,148 @@
+name: Prebuild public dependencies
+
+"on":
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Build target
+        type: choice
+        required: true
+        default: x64-windows-latest
+        options:
+          - x64-windows-latest
+          - x64-windows-v142
+          - x64-windows-static
+          - x64-linux
+          - all
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prebuild-${{ github.ref }}-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  select:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: select
+        shell: bash
+        env:
+          BUILD_TARGET: ${{ inputs.target }}
+        run: |
+          matrix=$(jq -c --arg target "$BUILD_TARGET" '[.[] | select($target == "all" or .profile == $target)]' scripts/profiles.json)
+          test "$matrix" != '[]'
+          echo "matrix={\"include\":$matrix}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: select
+    name: ${{ matrix.profile }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select.outputs.matrix) }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      VCPKG_DISABLE_METRICS: '1'
+      VCPKG_MAX_CONCURRENCY: '2'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+          fetch-depth: 0
+      - name: Ensure complete vcpkg version history
+        run: |
+          if [[ "$(git -C vcpkg rev-parse --is-shallow-repository)" == true ]]; then
+            git -C vcpkg fetch --unshallow origin
+          fi
+      - name: Add MSBuild to PATH
+        if: runner.os == 'Windows'
+        uses: microsoft/setup-msbuild@v3
+        with:
+          msbuild-architecture: x64
+      - name: Initialize the MSVC developer environment
+        if: runner.os == 'Windows'
+        id: msvc
+        uses: seanmiddleditch/gha-setup-vsdevenv@cf96bf5b227cac6af28c04c4a4e69286ea444163
+        with:
+          arch: amd64
+          host_arch: amd64
+          toolset_version: ${{ matrix.toolset }}
+      - name: Verify selected MSVC toolset
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          BUILD_PROFILE: ${{ matrix.profile }}
+          SELECTED_VS_PATH: ${{ steps.msvc.outputs.install_path }}
+        run: |
+          if (-not $env:VCToolsVersion) { throw 'MSVC environment was not initialized.' }
+          if ($env:BUILD_PROFILE -eq 'x64-windows-v142' -and $env:VCToolsVersion -notlike '14.29.*') {
+            throw "Expected MSVC 14.29, got $env:VCToolsVersion"
+          }
+          "VCPKG_VISUAL_STUDIO_PATH=$env:SELECTED_VS_PATH" >> $env:GITHUB_ENV
+          Write-Output "Visual Studio: $env:SELECTED_VS_PATH; MSVC: $env:VCToolsVersion"
+      - name: Prepare isolated directories
+        env:
+          BUILD_PROFILE: ${{ matrix.profile }}
+        run: |
+          work="$RUNNER_TEMP/prebuilt-vcpkg/$BUILD_PROFILE"
+          mkdir -p "$work/binary-cache"
+          if command -v cygpath >/dev/null 2>&1; then work=$(cygpath -m "$work"); fi
+          echo "PREBUILT_WORK_DIR=$work" >> "$GITHUB_ENV"
+      - name: Restore binary cache
+        id: cache
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.PREBUILT_WORK_DIR }}/binary-cache
+          key: binaries-v1-${{ matrix.profile }}-${{ hashFiles('manifests/**', 'overlay-ports/**', 'triplets/**', '.gitmodules') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            binaries-v1-${{ matrix.profile }}-${{ hashFiles('manifests/**', 'overlay-ports/**', 'triplets/**', '.gitmodules') }}-
+            binaries-v1-${{ matrix.profile }}-
+      - name: Install Linux build prerequisites
+        if: runner.os == 'Linux'
+        run: bash scripts/linux-prerequisites.sh
+      - name: Bootstrap vcpkg on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & ./vcpkg/bootstrap-vcpkg.bat -disableMetrics
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Bootstrap vcpkg on Linux
+        if: runner.os == 'Linux'
+        run: ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
+      - name: Build and package dependencies
+        env:
+          BUILD_PROFILE: ${{ matrix.profile }}
+        run: bash scripts/build.sh "$BUILD_PROFILE"
+      - name: Save completed binary packages
+        if: always() && !cancelled()
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.PREBUILT_WORK_DIR }}/binary-cache
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - name: Upload prebuilt packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: prebuilt-${{ matrix.profile }}-${{ github.run_id }}
+          path: artifacts/${{ matrix.profile }}/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: logs-${{ matrix.profile }}-${{ github.run_id }}
+          path: |
+            artifacts/${{ matrix.profile }}/*.log
+            vcpkg/buildtrees/**/*.log
+            ${{ env.PREBUILT_WORK_DIR }}/installed/vcpkg/issue_body.md
+          if-no-files-found: ignore
+          retention-days: 7

@@ -1,0 +1,115 @@
+{
+  "name": "ireader-media-server",
+  "version-string": "git-c0463893bc509e65bea9f4f76be68c1f89ccdfcf",
+  "description": "RTSP/RTP/RTMP/FLV/HLS/MPEG-TS/MPEG-PS/MPEG-DASH/MP4/fMP4/MKV/WebM",
+  "license": "MIT",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "default-features": [
+    "dash",
+    "flv",
+    "hls",
+    "mkv",
+    "mov",
+    "mpeg",
+    "rtmp",
+    "rtp",
+    "sip"
+  ],
+  "features": {
+    "dash": {
+      "description": "ISO/IEC 23009-1 MPEG-DASH support",
+      "dependencies": [
+        {
+          "name": "ireader-media-server",
+          "default-features": false,
+          "features": [
+            "flv",
+            "hls",
+            "mov"
+          ]
+        }
+      ]
+    },
+    "flv": {
+      "description": "FLV file audio/video support"
+    },
+    "hls": {
+      "description": "HLS package support",
+      "dependencies": [
+        {
+          "name": "ireader-media-server",
+          "default-features": false,
+          "features": [
+            "mov",
+            "mpeg"
+          ]
+        }
+      ]
+    },
+    "mkv": {
+      "description": "MKV/WebM file/live stream support"
+    },
+    "mov": {
+      "description": "ISO/IEC 14496-12 MP4 file support"
+    },
+    "mpeg": {
+      "description": "ITU-T H.222.0 PS/TS read/write support"
+    },
+    "rtmp": {
+      "description": "RTMP server/client support",
+      "dependencies": [
+        {
+          "name": "ireader-media-server",
+          "default-features": false,
+          "features": [
+            "flv"
+          ]
+        }
+      ]
+    },
+    "rtp": {
+      "description": "RFC3550 RTP/RTCP support"
+    },
+    "rtsp": {
+      "description": "RFC2326 RTSP & RFC4566 SDP support",
+      "dependencies": [
+        {
+          "name": "ireader-media-server",
+          "default-features": false,
+          "features": [
+            "flv",
+            "rtp"
+          ]
+        },
+        {
+          "name": "ireader-sdk",
+          "default-features": false,
+          "features": [
+            "http"
+          ]
+        }
+      ]
+    },
+    "sip": {
+      "description": "sip user-agent & ICE support",
+      "dependencies": [
+        {
+          "name": "ireader-sdk",
+          "default-features": false,
+          "features": [
+            "http"
+          ]
+        }
+      ]
+    }
+  }
+}
