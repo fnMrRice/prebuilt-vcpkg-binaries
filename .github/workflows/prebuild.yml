@@ -78,9 +78,18 @@ jobs:
           BUILD_PROFILE: ${{ matrix.profile }}
         run: |
           work="$RUNNER_TEMP/prebuilt-vcpkg/$BUILD_PROFILE"
-          mkdir -p "$work/binary-cache"
+          mkdir -p "$work/binary-cache" "$work/downloads"
           if command -v cygpath >/dev/null 2>&1; then work=$(cygpath -m "$work"); fi
           echo "PREBUILT_WORK_DIR=$work" >> "$GITHUB_ENV"
+      - name: Restore source and tool downloads
+        id: downloads
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ env.PREBUILT_WORK_DIR }}/downloads
+          key: downloads-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.profile }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            downloads-v1-${{ runner.os }}-${{ runner.arch }}-${{ matrix.profile }}-
+            downloads-v1-${{ runner.os }}-${{ runner.arch }}-
       - name: Restore binary cache
         id: cache
         uses: actions/cache/restore@v5
@@ -106,6 +115,12 @@ jobs:
         env:
           BUILD_PROFILE: ${{ matrix.profile }}
         run: bash scripts/build.sh "$BUILD_PROFILE"
+      - name: Save source and tool downloads
+        if: ${{ always() && !cancelled() && steps.downloads.outputs.cache-primary-key != '' }}
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ env.PREBUILT_WORK_DIR }}/downloads
+          key: ${{ steps.downloads.outputs.cache-primary-key }}
       - name: Save completed binary packages
         if: ${{ always() && !cancelled() && steps.cache.outputs.cache-primary-key != '' }}
         uses: actions/cache/save@v5

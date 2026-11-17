@@ -24,7 +24,7 @@ if [[ "$triplet" == *windows* ]]; then vcpkg="$vcpkg.exe"; fi
 if [[ ! -s "$vcpkg" ]]; then echo 'Bootstrap the vcpkg submodule before building.' >&2; exit 2; fi
 args=(install "--triplet=$triplet" "--host-triplet=$host"
       "--x-manifest-root=$(native_path "$root/manifests/$manifest")"
-      "--x-install-root=$(native_path "$work/installed")" --clean-after-build)
+      "--x-install-root=$(native_path "$work/installed")" --clean-buildtrees-after-build --clean-packages-after-build)
 if [[ "$profile" == x64-windows-v142 ]]; then
   args+=("--overlay-triplets=$(native_path "$root/triplets")")
 fi

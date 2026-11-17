@@ -35,6 +35,10 @@ several hours, especially when Qt and FFmpeg are not yet cached.
 The workflow must be present on the repository's default branch for the manual
 button to appear. Artifacts expire after 30 days. Completed binary packages are
 cached even when a later port fails, so another manual run can reuse them.
+Source archives and downloaded build tools are cached separately by OS and architecture.
+Build trees and staging packages are cleaned; download archives are retained.
+GitHub normally evicts caches after seven days without access, or when the
+repository cache quota requires eviction. Artifact retention is independent.
 
 ## Packages
 
@@ -63,16 +67,17 @@ callback to the upstream callback signature. Source licenses are included in eac
 
 Each artifact includes:
 
-- `installed.tar.gz`: the vcpkg installation tree, including headers, libraries,
+- `installed.7z` (Windows) / `installed.tar.xz` (Linux): the vcpkg installation tree, including headers, libraries,
   tools, CMake package files, and license files.
-- `binary-cache.tar.gz`: ABI-keyed vcpkg binary packages for reuse.
+- `binary-cache.7z` (Windows) / `binary-cache.tar.xz` (Linux): ABI-keyed vcpkg binary packages for reuse.
 - `SHA256SUMS`, `packages.txt`, `build-info.txt`, and the build log.
 - The manifests and overlay files used by the build.
 
 Extract the installed archive and configure a consumer with the matching triplet:
 
 ```sh
-tar -xzf installed.tar.gz
+# Linux: tar -xJf installed.tar.xz
+# Windows: 7z x installed.7z
 cmake -S . -B build \
   -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake \
   -DVCPKG_INSTALLED_DIR=/absolute/path/to/installed \
@@ -83,7 +88,8 @@ cmake -S . -B build \
 Alternatively, extract the binary-cache archive and set an absolute cache path:
 
 ```sh
-tar -xzf binary-cache.tar.gz
+# Linux: tar -xJf binary-cache.tar.xz
+# Windows: 7z x binary-cache.7z
 export VCPKG_BINARY_SOURCES='clear;files,/absolute/path/to/binary-cache,read'
 ```
 
