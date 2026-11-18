@@ -17,6 +17,8 @@ mkdir -p "$work/binary-cache" "$work/installed" "$work/downloads" "$root/artifac
 export VCPKG_ROOT=$(native_path "$root/vcpkg")
 export VCPKG_DOWNLOADS=$(native_path "$work/downloads")
 export VCPKG_BINARY_SOURCES="clear;files,$(native_path "$work/binary-cache"),readwrite"
+# Keep compiler updates from invalidating otherwise matching binary packages.
+export VCPKG_FEATURE_FLAGS=-compilertracking
 export VCPKG_DISABLE_METRICS=1
 export VCPKG_MAX_CONCURRENCY=${VCPKG_MAX_CONCURRENCY:-2}
 vcpkg="$root/vcpkg/vcpkg"
@@ -29,12 +31,17 @@ if [[ "$profile" == x64-windows-v142 ]]; then
   args+=("--overlay-triplets=$(native_path "$root/triplets")")
 fi
 printf 'Building %s with target %s and host %s\n' "$profile" "$triplet" "$host"
-"$vcpkg" "${args[@]}" 2>&1 | tee "$root/artifacts/$profile/build.log"
+{
+  printf 'Compiler tracking: disabled (VCPKG_FEATURE_FLAGS=%s)\n' "$VCPKG_FEATURE_FLAGS"
+  printf 'Binary cache archives available before install: %s\n' "$(find "$work/binary-cache" -type f -name '*.zip' | wc -l | tr -d '[:space:]')"
+  "$vcpkg" "${args[@]}"
+} 2>&1 | tee "$root/artifacts/$profile/build.log"
 "$vcpkg" list "--x-install-root=$(native_path "$work/installed")" > "$root/artifacts/$profile/packages.txt"
 {
   printf 'Profile: %s\nTriplet: %s\nHost triplet: %s\n' "$profile" "$triplet" "$host"
   printf 'Repository commit: %s\n' "$(git -C "$root" rev-parse HEAD)"
   printf 'vcpkg commit: %s\n' "$(git -C "$root/vcpkg" rev-parse HEAD)"
+  printf 'Compiler tracking: disabled\n'
   "$vcpkg" version
   cmake --version | head -n 1
 } > "$root/artifacts/$profile/build-info.txt"

@@ -121,11 +121,31 @@ export VCPKG_BINARY_SOURCES='clear;files,/absolute/path/to/binary-cache,read'
 ```
 
 In PowerShell, use `$env:VCPKG_BINARY_SOURCES = 'clear;files,C:/path/to/binary-cache,read'`.
-Binary-cache restoration requires matching port contents, features, triplet,
-compiler, and other ABI inputs. Use the same pinned submodule, manifests, and
-overlays. For v142, pass `--overlay-triplets=/path/to/triplets` and use the
-`x64-windows-v142` target and host triplets.
-A different local compiler can cause vcpkg to rebuild packages.
+The build script exports `VCPKG_FEATURE_FLAGS=-compilertracking` for all profiles,
+including host dependencies. Compiler executable hashes are excluded from package
+ABIs. Packages built with different compiler versions can therefore be reused;
+the consumer must use a compiler compatible with those binaries.
+
+When consuming the binary cache, use the same setting:
+
+```sh
+export VCPKG_FEATURE_FLAGS=-compilertracking
+```
+
+In PowerShell, use `$env:VCPKG_FEATURE_FLAGS = '-compilertracking'`.
+For CMake manifest integration, set this environment variable before configuring.
+
+Binary-cache restoration still requires matching port contents, features, triplet,
+helper scripts, tool versions, and dependency ABIs. Use the same pinned submodule,
+manifests, and overlays. For v142, pass `--overlay-triplets=/path/to/triplets` and
+use the `x64-windows-v142` target and host triplets. Switching compiler tracking
+off changes package ABIs, so packages cached with tracking enabled normally need
+one rebuild. Updating vcpkg ports, scripts, or ABI calculation rules can also
+invalidate packages independently of compiler tracking.
+
+The build log records how many binary-cache archives were present before install.
+vcpkg then reports how many packages it restored; restoring a GitHub Actions cache
+archive alone does not guarantee that its package ABIs match.
 
 ## Local builds
 
