@@ -7,7 +7,7 @@ vcpkg_from_github(
     REF e84a3d1a91cacdd8dedbbc931a2886b99bec4846
     SHA512 a575274bc26dc76071bfca7c24566124440012d8c81e5da9d558ccf8768ef171db0cc299ffacb0540f5751ab06b3b6eef60e9182aa358f4fecf77a7c95d26f6f
     HEAD_REF master
-    PATCHES fix-poll-callback.patch
+    PATCHES fix-poll-callback.patch fix-algorithm-includes.patch
 )
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt"

@@ -45,14 +45,16 @@ repository cache quota requires eviction. Artifact retention is independent.
 The manifests cover graphics, audio/video codecs, networking, logging,
 serialization, Boost, development tools, and Qt 5. The default manifest also
 contains an opt-in Qt 6 feature; the workflow builds its default Qt 5 feature.
-The Windows 7 manifest keeps its separate Boost baseline and ZeroMQ compatibility
-overlay. OpenSSL and FFmpeg are resolved from the official registry.
+The Windows 7 manifest keeps its separate Boost baseline, ZeroMQ compatibility
+overlay, and a Qt 5 FILE_ID_INFO declaration fix for MSVC Win7 targets. OpenSSL and FFmpeg are resolved from the official registry.
 
 Additional public overlay ports are maintained in `overlay-ports/additional/`:
 
 | Port | Upstream | Pinned source |
 | --- | --- | --- |
 | `gmssl` | [guanzhi/GmSSL](https://github.com/guanzhi/GmSSL) | `v3.2.0` |
+| `ireader-avcodec` | [ireader/avcodec](https://github.com/ireader/avcodec) | `f5637e6dfec3291f5bd697c092da91586c4faba8` |
+| `ireader-media-common` | [ireader/media-server](https://github.com/ireader/media-server) | `c0463893bc509e65bea9f4f76be68c1f89ccdfcf` |
 | `ireader-sdk` | [ireader/sdk](https://github.com/ireader/sdk) | `e84a3d1a91cacdd8dedbbc931a2886b99bec4846` |
 | `ireader-media-server` | [ireader/media-server](https://github.com/ireader/media-server) | `c0463893bc509e65bea9f4f76be68c1f89ccdfcf` |
 
@@ -62,6 +64,31 @@ package. The ireader ports supply CMake integration and export installed include
 paths. The media-server dependency enables MPEG support without default features.
 The SDK overlay also enables the Linux platform branch and adapts its HTTP poll
 callback to the upstream callback signature. Source licenses are included in each installed package's `share/<port>/copyright`.
+
+### ireader modules
+
+| Port | Components/features |
+| --- | --- |
+| `ireader-sdk` | Core `sdk`, optional `aio`, `http`, `ice` |
+| `ireader-avcodec` | `h264`, `h265`, `avcodec`, `avbsf` |
+| `ireader-media-server` | `dash`, `flv`, `hls`, `mkv`, `mov`, `mpeg`, `rtmp`, `rtp`, `rtsp`, `sip` |
+| `ireader-media-common` | Shared FLV library and codec metadata |
+
+Feature dependencies automatically enable required modules. The shared port avoids
+an upstream AVBSF/RTSP dependency cycle while retaining `ireader::media-server::flv`.
+`ireader-avcodec` includes the four portable libraries built by the upstream
+root Makefile. External encoder backends and the separate `avplayer`, `ffutils`,
+and platform renderer projects are not enabled implicitly. The codec archive is
+named `ireader-avcodec` to coexist with FFmpeg's `avcodec` archive.
+
+Installed targets propagate their include directories, platform definitions,
+system libraries, and package dependencies. Required CMake components are checked:
+
+```cmake
+find_package(ireader-sdk CONFIG REQUIRED COMPONENTS aio http)
+find_package(ireader-media-server CONFIG REQUIRED COMPONENTS rtsp mkv)
+target_link_libraries(app PRIVATE ireader::sdk::http ireader::media-server::rtsp)
+```
 
 ## Use the output
 

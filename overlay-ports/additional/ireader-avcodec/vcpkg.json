@@ -1,0 +1,65 @@
+{
+  "name": "ireader-avcodec",
+  "version-string": "git-f5637e6dfec3291f5bd697c092da91586c4faba8",
+  "description": "H.264/H.265 parsers, packet utilities, built-in codecs and bitstream filters",
+  "license": "MIT",
+  "supports": "windows | linux",
+  "dependencies": [
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ],
+  "default-features": [
+    "h264",
+    "h265",
+    "avcodec",
+    "avbsf"
+  ],
+  "features": {
+    "h264": {
+      "description": "H.264 bitstream parser"
+    },
+    "h265": {
+      "description": "H.265 bitstream parser",
+      "dependencies": [
+        {
+          "name": "ireader-avcodec",
+          "default-features": false,
+          "features": [
+            "h264"
+          ]
+        }
+      ]
+    },
+    "avcodec": {
+      "description": "Packet/frame utilities and built-in codecs",
+      "dependencies": [
+        {
+          "name": "ireader-sdk",
+          "default-features": false,
+          "features": []
+        }
+      ]
+    },
+    "avbsf": {
+      "description": "Bitstream and packet conversion filters",
+      "dependencies": [
+        {
+          "name": "ireader-avcodec",
+          "default-features": false,
+          "features": [
+            "h264",
+            "h265",
+            "avcodec"
+          ]
+        },
+        "ireader-media-common"
+      ]
+    }
+  }
+}

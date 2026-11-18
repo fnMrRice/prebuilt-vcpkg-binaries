@@ -1,0 +1,14 @@
+--- a/algorithm/lcs.c
++++ b/algorithm/lcs.c
+@@ -1,3 +1,4 @@
++#include <string.h>
+ // Longest Common Subsequences(not Longest Common Substring)
+ // 
+ // lcs("nematode knowledge", "empty bottle") => "emt ole";
+--- a/algorithm/substring.c
++++ b/algorithm/substring.c
+@@ -1,3 +1,4 @@
++#include <string.h>
+ // longest common substring(not longest common sequence)
+ //
+ // strsubstring("banananobano", "xanano") => "anano"

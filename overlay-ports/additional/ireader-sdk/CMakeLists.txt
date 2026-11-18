@@ -1,47 +1,19 @@
 cmake_minimum_required(VERSION 3.29)
-
 project(ireader-sdk VERSION 1.0.0 LANGUAGES C CXX)
-
-option(BUILD_LIBRARY_AIO "Build library aio" ON)
-option(BUILD_LIBRARY_HTTP "Build library http" ON)
-option(BUILD_LIBRARY_ICE "Build library ice" ON)
-option(BUILD_TESTING "Build tests" OFF)
-
-if (WIN32)
-    add_compile_definitions(OS_WINDOWS)
-elseif (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_compile_definitions(OS_LINUX)
-elseif (APPLE)
-    add_compile_definitions(OS_MAC)
-elseif (ANDROID)
-    add_compile_definitions(OS_ANDROID)
-    add_compile_options(-Wno-incompatible-function-pointer-types)
-endif ()
-
+set(IREADER_INCLUDE_PREFIX ireader/sdk)
+include(cmake/library.cmake)
+find_package(Threads REQUIRED)
+option(BUILD_LIBRARY_AIO "Build asynchronous I/O" ON)
+option(BUILD_LIBRARY_HTTP "Build HTTP" ON)
+option(BUILD_LIBRARY_ICE "Build ICE/STUN" ON)
 include(cmake/libsdk.cmake)
-if (BUILD_LIBRARY_AIO)
+if(BUILD_LIBRARY_AIO OR BUILD_LIBRARY_HTTP)
     include(cmake/libaio.cmake)
-endif ()
-if (BUILD_LIBRARY_HTTP)
+endif()
+if(BUILD_LIBRARY_HTTP)
     include(cmake/libhttp.cmake)
-endif ()
-if (BUILD_LIBRARY_ICE)
+endif()
+if(BUILD_LIBRARY_ICE)
     include(cmake/libice.cmake)
-endif ()
-
-foreach(library IN LISTS IREADER_SDK_EXPORT_LIBS)
-    target_include_directories(${library} INTERFACE "$<INSTALL_INTERFACE:include>")
-endforeach()
-
-install(
-        TARGETS ${IREADER_SDK_EXPORT_LIBS}
-        EXPORT ireader-sdk-config
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib
-        RUNTIME DESTINATION bin
-)
-install(
-        EXPORT ireader-sdk-config
-        DESTINATION lib/cmake/ireader-sdk
-        NAMESPACE ireader::sdk::
-)
+endif()
+include(cmake/package.cmake)

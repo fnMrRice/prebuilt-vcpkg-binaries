@@ -32,15 +32,18 @@
           "name": "ireader-media-server",
           "default-features": false,
           "features": [
-            "flv",
             "hls",
+            "flv",
             "mov"
           ]
         }
       ]
     },
     "flv": {
-      "description": "FLV file audio/video support"
+      "description": "FLV file audio/video support",
+      "dependencies": [
+        "ireader-media-common"
+      ]
     },
     "hls": {
       "description": "HLS package support",
@@ -49,8 +52,8 @@
           "name": "ireader-media-server",
           "default-features": false,
           "features": [
-            "mov",
-            "mpeg"
+            "mpeg",
+            "mov"
           ]
         }
       ]
@@ -73,6 +76,13 @@
           "features": [
             "flv"
           ]
+        },
+        {
+          "name": "ireader-sdk",
+          "default-features": false,
+          "features": [
+            "aio"
+          ]
         }
       ]
     },
@@ -86,8 +96,11 @@
           "name": "ireader-media-server",
           "default-features": false,
           "features": [
+            "rtp",
+            "mpeg",
             "flv",
-            "rtp"
+            "mov",
+            "mkv"
           ]
         },
         {
@@ -95,6 +108,13 @@
           "default-features": false,
           "features": [
             "http"
+          ]
+        },
+        {
+          "name": "ireader-avcodec",
+          "default-features": false,
+          "features": [
+            "avbsf"
           ]
         }
       ]
@@ -111,5 +131,7 @@
         }
       ]
     }
-  }
+  },
+  "port-version": 1,
+  "supports": "windows | linux"
 }

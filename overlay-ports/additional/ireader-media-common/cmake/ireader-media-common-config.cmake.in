@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+include(CMakeFindDependencyMacro)
+
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/ireader-media-common-targets.cmake")
+    include("${CMAKE_CURRENT_LIST_DIR}/ireader-media-common-targets.cmake")
+endif()
+set(ireader-media-common_AVAILABLE_COMPONENTS "@IREADER_COMPONENTS@")
+foreach(component IN LISTS ireader-media-common_FIND_COMPONENTS)
+    if(component IN_LIST ireader-media-common_AVAILABLE_COMPONENTS)
+        set(ireader-media-common_${component}_FOUND TRUE)
+    else()
+        set(ireader-media-common_${component}_FOUND FALSE)
+    endif()
+endforeach()
+check_required_components(ireader-media-common)

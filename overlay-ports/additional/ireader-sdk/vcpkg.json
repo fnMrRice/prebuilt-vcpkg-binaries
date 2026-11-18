@@ -37,5 +37,7 @@
     "ice": {
       "description": "libice"
     }
-  }
+  },
+  "port-version": 1,
+  "supports": "windows | linux"
 }

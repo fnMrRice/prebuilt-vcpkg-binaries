@@ -1,0 +1,3 @@
+# Preserve upstream helper whitespace and patch context line endings.
+cmake/*.cmake -whitespace
+patches/qmake-arm64.patch -text
