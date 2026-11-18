@@ -81,7 +81,10 @@ The Qt 6 manifest additionally includes SDL3, JSON Schema validation, SQLite,
 Qt Multimedia, Qt Shader Tools, Qt translations, and host Designer/Linguist tools.
 Qt Base enables Vulkan, Windows deployment tools, and Wayland where supported.
 The Windows 7 manifest keeps its separate Boost baseline, ZeroMQ compatibility
-overlay, and a Qt 5 FILE_ID_INFO declaration fix for MSVC Win7 targets. OpenSSL and FFmpeg are resolved from the official registry.
+overlay, and a Qt 5 FILE_ID_INFO declaration fix for MSVC Win7 targets. Its Qt 5
+Declarative overlay disables the optional D3D12 backend, which requires
+DirectComposition APIs unavailable on Windows 7. OpenSSL and FFmpeg are resolved
+from the official registry.
 
 Additional public overlay ports are maintained in `overlay-ports/additional/`:
 
