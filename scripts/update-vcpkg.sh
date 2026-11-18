@@ -2,7 +2,7 @@
 set -euo pipefail
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
-configs=(manifests/default/vcpkg-configuration.json manifests/win7/vcpkg-configuration.json)
+configs=(manifests/*/vcpkg-configuration.json)
 for config in "${configs[@]}"; do
   jq -e '."default-registry".kind == "builtin"' "$config" >/dev/null
 done

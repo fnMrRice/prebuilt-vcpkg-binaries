@@ -12,14 +12,24 @@ name: Prebuild public dependencies
           - x64-windows-latest
           - x64-windows-v142
           - x64-windows-static
+          - x64-windows-static-release
           - x64-linux
           - all
+      qt_version:
+        description: Qt libraries to include
+        type: choice
+        required: true
+        default: qt5
+        options:
+          - none
+          - qt5
+          - qt6
 
 permissions:
   contents: read
 
 concurrency:
-  group: prebuild-${{ github.ref }}-${{ inputs.target }}
+  group: prebuild-${{ github.ref }}-${{ inputs.target }}-${{ inputs.qt_version }}
   cancel-in-progress: false
 
 jobs:
@@ -33,14 +43,18 @@ jobs:
         shell: bash
         env:
           BUILD_TARGET: ${{ inputs.target }}
+          QT_VERSION: ${{ inputs.qt_version }}
         run: |
-          matrix=$(jq -c --arg target "$BUILD_TARGET" '[.[] | select($target == "all" or .profile == $target)]' scripts/profiles.json)
-          test "$matrix" != '[]'
+          matrix=$(jq -c --arg target "$BUILD_TARGET" --arg qt "$QT_VERSION" '[.[] | select($target == "all" or .profile == $target) | select((.qt_versions | index($qt)) != null) | . + {qt_version: $qt, archive_name: (.triplet + (if $qt == "none" then "" else "-with-" + $qt end))}]' scripts/profiles.json)
+          if [[ "$matrix" == '[]' ]]; then
+            echo "Qt selection '$QT_VERSION' is not supported for target '$BUILD_TARGET'." >&2
+            exit 2
+          fi
           echo "matrix={\"include\":$matrix}" >> "$GITHUB_OUTPUT"
 
   build:
     needs: select
-    name: ${{ matrix.profile }}
+    name: ${{ matrix.profile }} (${{ matrix.qt_version }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 360
     strategy:
@@ -76,8 +90,9 @@ jobs:
       - name: Prepare isolated directories
         env:
           BUILD_PROFILE: ${{ matrix.profile }}
+          QT_VERSION: ${{ matrix.qt_version }}
         run: |
-          work="$RUNNER_TEMP/prebuilt-vcpkg/$BUILD_PROFILE"
+          work="$RUNNER_TEMP/prebuilt-vcpkg/$BUILD_PROFILE/$QT_VERSION"
           mkdir -p "$work/binary-cache" "$work/downloads"
           if command -v cygpath >/dev/null 2>&1; then work=$(cygpath -m "$work"); fi
           echo "PREBUILT_WORK_DIR=$work" >> "$GITHUB_ENV"
@@ -95,9 +110,10 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ${{ env.PREBUILT_WORK_DIR }}/binary-cache
-          key: binaries-v1-${{ matrix.profile }}-${{ hashFiles('manifests/**', 'overlay-ports/**', 'triplets/**', '.gitmodules') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          key: binaries-v1-${{ matrix.profile }}-${{ matrix.qt_version }}-${{ hashFiles('manifests/**', 'overlay-ports/**', 'triplets/**', '.gitmodules') }}-${{ github.run_id }}-${{ github.run_attempt }}
           restore-keys: |
-            binaries-v1-${{ matrix.profile }}-${{ hashFiles('manifests/**', 'overlay-ports/**', 'triplets/**', '.gitmodules') }}-
+            binaries-v1-${{ matrix.profile }}-${{ matrix.qt_version }}-${{ hashFiles('manifests/**', 'overlay-ports/**', 'triplets/**', '.gitmodules') }}-
+            binaries-v1-${{ matrix.profile }}-${{ matrix.qt_version }}-
             binaries-v1-${{ matrix.profile }}-
       - name: Install Linux build prerequisites
         if: runner.os == 'Linux'
@@ -114,7 +130,8 @@ jobs:
       - name: Build and package dependencies
         env:
           BUILD_PROFILE: ${{ matrix.profile }}
-        run: bash scripts/build.sh "$BUILD_PROFILE"
+          QT_VERSION: ${{ matrix.qt_version }}
+        run: bash scripts/build.sh "$BUILD_PROFILE" "$QT_VERSION"
       - name: Save source and tool downloads
         if: ${{ always() && !cancelled() && steps.downloads.outputs.cache-primary-key != '' }}
         uses: actions/cache/save@v5
@@ -130,8 +147,8 @@ jobs:
       - name: Upload prebuilt packages
         uses: actions/upload-artifact@v7
         with:
-          name: prebuilt-${{ matrix.profile }}-${{ github.run_id }}
-          path: artifacts/${{ matrix.profile }}/
+          name: ${{ matrix.archive_name }}
+          path: artifacts/${{ matrix.profile }}/${{ matrix.qt_version }}/
           if-no-files-found: error
           compression-level: 0
           retention-days: 30
@@ -139,9 +156,9 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: logs-${{ matrix.profile }}-${{ github.run_id }}
+          name: logs-${{ matrix.archive_name }}
           path: |
-            artifacts/${{ matrix.profile }}/*.log
+            artifacts/${{ matrix.profile }}/${{ matrix.qt_version }}/*.log
             vcpkg/buildtrees/**/*.log
             ${{ env.PREBUILT_WORK_DIR }}/installed/vcpkg/issue_body.md
           if-no-files-found: ignore

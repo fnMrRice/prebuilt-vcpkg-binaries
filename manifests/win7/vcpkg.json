@@ -71,41 +71,6 @@
         "mpeg"
       ]
     },
-    {
-      "name": "qt5-base",
-      "default-features": false,
-      "features": [
-        "openssl",
-        "sqlite3plugin"
-      ]
-    },
-    {
-      "name": "qt5-multimedia",
-      "default-features": false
-    },
-    {
-      "name": "qt5-networkauth"
-    },
-    {
-      "name": "qt5-translations"
-    },
-    {
-      "name": "qt5-wayland",
-      "platform": "linux"
-    },
-    {
-      "name": "qt5-websockets",
-      "default-features": false
-    },
-    {
-      "name": "qt5-tools",
-      "default-features": false
-    },
-    {
-      "name": "qt5-tools",
-      "default-features": false,
-      "host": true
-    },
     "ireader-sdk"
   ],
   "overrides": [
@@ -114,5 +79,50 @@
       "version": "7.1.2",
       "port-version": 5
     }
-  ]
+  ],
+  "default-features": [
+    "qt5"
+  ],
+  "features": {
+    "qt5": {
+      "description": "Qt 5 libraries and host tools",
+      "dependencies": [
+        {
+          "name": "qt5-base",
+          "default-features": false,
+          "features": [
+            "openssl",
+            "sqlite3plugin"
+          ]
+        },
+        {
+          "name": "qt5-multimedia",
+          "default-features": false
+        },
+        {
+          "name": "qt5-networkauth"
+        },
+        {
+          "name": "qt5-translations"
+        },
+        {
+          "name": "qt5-wayland",
+          "platform": "linux"
+        },
+        {
+          "name": "qt5-websockets",
+          "default-features": false
+        },
+        {
+          "name": "qt5-tools",
+          "default-features": false
+        },
+        {
+          "name": "qt5-tools",
+          "default-features": false,
+          "host": true
+        }
+      ]
+    }
+  }
 }

@@ -5,7 +5,12 @@
     "triplet": "x64-windows",
     "host_triplet": "x64-windows",
     "manifest": "manifests/default",
-    "toolset": ""
+    "toolset": "",
+    "qt_versions": [
+      "none",
+      "qt5",
+      "qt6"
+    ]
   },
   {
     "profile": "x64-windows-v142",
@@ -13,7 +18,11 @@
     "triplet": "x64-windows-v142",
     "host_triplet": "x64-windows-v142",
     "manifest": "manifests/win7",
-    "toolset": "14.29"
+    "toolset": "14.29",
+    "qt_versions": [
+      "none",
+      "qt5"
+    ]
   },
   {
     "profile": "x64-windows-static",
@@ -21,7 +30,25 @@
     "triplet": "x64-windows-static",
     "host_triplet": "x64-windows",
     "manifest": "manifests/default",
-    "toolset": ""
+    "toolset": "",
+    "qt_versions": [
+      "none",
+      "qt5",
+      "qt6"
+    ]
+  },
+  {
+    "profile": "x64-windows-static-release",
+    "os": "windows-latest",
+    "triplet": "x64-windows-static-release",
+    "host_triplet": "x64-windows",
+    "manifest": "manifests/default",
+    "toolset": "",
+    "qt_versions": [
+      "none",
+      "qt5",
+      "qt6"
+    ]
   },
   {
     "profile": "x64-linux",
@@ -29,6 +56,11 @@
     "triplet": "x64-linux",
     "host_triplet": "x64-linux",
     "manifest": "manifests/default",
-    "toolset": ""
+    "toolset": "",
+    "qt_versions": [
+      "none",
+      "qt5",
+      "qt6"
+    ]
   }
 ]

@@ -5,18 +5,21 @@ All source downloads use public upstream locations. No private registry or SSH k
 
 ## Build targets
 
-| Workflow target | Runner | Target triplet | Host triplet | Compiler | Manifest |
-| --- | --- | --- | --- | --- | --- |
-| `x64-windows-latest` | `windows-latest` | `x64-windows` | `x64-windows` | Default MSVC in the image | Default |
-| `x64-windows-v142` | `windows-2022` | `x64-windows-v142` | `x64-windows-v142` | MSVC v142 | Windows 7 |
-| `x64-windows-static` | `windows-latest` | `x64-windows-static` | `x64-windows` | Default MSVC in the image | Default |
-| `x64-linux` | `ubuntu-24.04` | `x64-linux` | `x64-linux` | Default GCC in the image | Default |
+| Workflow target | Runner | Target triplet | Host triplet | Qt selections |
+| --- | --- | --- | --- | --- |
+| `x64-windows-latest` | `windows-latest` | `x64-windows` | `x64-windows` | `none`, `qt5`, `qt6` |
+| `x64-windows-v142` | `windows-2022` | `x64-windows-v142` | `x64-windows-v142` | `none`, `qt5` |
+| `x64-windows-static` | `windows-latest` | `x64-windows-static` | `x64-windows` | `none`, `qt5`, `qt6` |
+| `x64-windows-static-release` | `windows-latest` | `x64-windows-static-release` | `x64-windows` | `none`, `qt5`, `qt6` |
+| `x64-linux` | `ubuntu-24.04` | `x64-linux` | `x64-linux` | `none`, `qt5`, `qt6` |
 
 Windows jobs reuse preinstalled MSVC through `microsoft/setup-msbuild` and
 `scripts/msvc-env.ps1`, which calls `vcvarsall.bat`; neither installs compilers. The v142 profile
 uses `triplets/x64-windows-v142.cmake` to pin MSVC v142 and Windows 7 API flags.
-Other profiles use vcpkg's built-in triplets without overrides.
-Release and Debug libraries are built. The static Windows target requests static
+Other profiles use vcpkg's supplied triplets without overrides, including the
+community `x64-windows-static-release` triplet. Target libraries are built in both
+Release and Debug, except `x64-windows-static-release`, which builds Release only.
+Host tools use the listed host triplet. Both static Windows targets request static
 libraries and the static MSVC CRT; individual ports can enforce their own linkage.
 `latest` follows the toolset installed in the selected runner image rather than
 pinning a compiler version. Linux packages target the runner's glibc environment.
@@ -25,13 +28,23 @@ The Windows 7 manifest and compiler flags do not replace runtime compatibility t
 ## Run manually
 
 1. Open **Actions → Prebuild public dependencies → Run workflow**.
-2. Select a target, or `all` to build all four targets.
-3. Download the `prebuilt-<target>-<run id>` artifact after the job succeeds.
+2. Select a target, or `all` to build every target compatible with the selected Qt version.
+3. Select `qt_version`: `none`, `qt5` (default), or `qt6`.
+4. Download the `<triplet>[-with-qt5|-with-qt6]` artifact after the job succeeds.
+
+`none` builds the non-Qt dependencies without enabling any Qt manifest feature.
+`qt5` uses `manifests/default/`, or `manifests/win7/` for v142. `qt6` uses the
+public-only `manifests/qt6/` dependency set and has no Windows 7 compatibility flags
+or overlays. With `all` and `qt6`, the v142 target is skipped; selecting v142 and
+Qt 6 explicitly reports an unsupported combination before any build starts.
+
+Work directories, binary-cache keys, logs, and artifact names include the Qt
+selection. Cache restore can fall back to older caches so ABI-identical common
+packages can still be reused; vcpkg checks each package ABI before restoration.
 
 The prebuild workflow only enables `workflow_dispatch`. Pushes, pull requests,
 releases, and schedules do not start builds. The default selection builds one target.
-A run may take
-several hours, especially when Qt and FFmpeg are not yet cached.
+A run may take several hours, especially when Qt and FFmpeg are not yet cached.
 
 The workflow must be present on the repository's default branch for the manual
 button to appear. Artifacts expire after 30 days. Completed binary packages are
@@ -46,7 +59,7 @@ repository cache quota requires eviction. Artifact retention is independent.
 **Update vcpkg baseline** runs on the first day of every month at 09:17 Hong Kong
 time (01:17 UTC), and can also be started manually from Actions. It checks out the
 repository's default branch, advances the vcpkg submodule to the latest upstream
-`master` commit, and sets both manifests' public default-registry baselines to the
+`master` commit, and sets all manifests' public default-registry baselines to the
 same commit. Changes are committed directly to the default branch; an unchanged
 baseline produces no commit.
 
@@ -59,8 +72,10 @@ this workflow to push to the default branch.
 ## Packages
 
 The manifests cover graphics, audio/video codecs, networking, logging,
-serialization, Boost, development tools, and Qt 5. The default manifest also
-contains an opt-in Qt 6 feature; the workflow builds its default Qt 5 feature.
+serialization, Boost, development tools, and an optional Qt 5 or Qt 6 stack.
+The Qt 6 manifest additionally includes SDL3, JSON Schema validation, SQLite,
+Qt Multimedia, Qt Shader Tools, Qt translations, and host Designer/Linguist tools.
+Qt Base enables Vulkan, Windows deployment tools, and Wayland where supported.
 The Windows 7 manifest keeps its separate Boost baseline, ZeroMQ compatibility
 overlay, and a Qt 5 FILE_ID_INFO declaration fix for MSVC Win7 targets. OpenSSL and FFmpeg are resolved from the official registry.
 
@@ -77,7 +92,8 @@ Additional public overlay ports are maintained in `overlay-ports/additional/`:
 Downloads are checked with SHA512. GmSSL includes a packaging patch for CMake
 exports and installation paths. Its upstream tests are excluded from the binary
 package. The ireader ports supply CMake integration and export installed include
-paths. The media-server dependency enables MPEG support without default features.
+paths. The Qt 5 manifests request media-server's MPEG feature without default
+features; the Qt 6 manifest enables its default module set.
 The SDK overlay also enables the Linux platform branch and adapts its HTTP poll
 callback to the upstream callback signature. Source licenses are included in each installed package's `share/<port>/copyright`.
 
@@ -108,19 +124,30 @@ target_link_libraries(app PRIVATE ireader::sdk::http ireader::media-server::rtsp
 
 ## Use the output
 
+Artifact names use the actual triplet, without a run ID. For example:
+
+| Target / Qt selection | Installed archive |
+| --- | --- |
+| `x64-windows-latest` / `none` | `x64-windows.7z` |
+| `x64-windows-latest` / `qt5` | `x64-windows-with-qt5.7z` |
+| `x64-windows-static-release` / `qt6` | `x64-windows-static-release-with-qt6.7z` |
+| `x64-linux` / `qt6` | `x64-linux-with-qt6.tar.xz` |
+
 Each artifact includes:
 
-- `installed.7z` (Windows) / `installed.tar.xz` (Linux): the vcpkg installation tree, including headers, libraries,
-  tools, CMake package files, and license files.
-- `binary-cache.7z` (Windows) / `binary-cache.tar.xz` (Linux): ABI-keyed vcpkg binary packages for reuse.
+- `<triplet>[-with-qt5|-with-qt6].7z` (Windows) / `.tar.xz` (Linux): the vcpkg
+  installation tree, including headers, libraries, tools, CMake package files,
+  and license files. With `none`, the name is the triplet alone.
+- `<triplet>[-with-qt5|-with-qt6]-binary-cache.7z` (Windows) / `.tar.xz` (Linux):
+  ABI-keyed vcpkg binary packages for reuse.
 - `SHA256SUMS`, `packages.txt`, `build-info.txt`, and the build log.
 - The manifests and overlay files used by the build.
 
 Extract the installed archive and configure a consumer with the matching triplet:
 
 ```sh
-# Linux: tar -xJf installed.tar.xz
-# Windows: 7z x installed.7z
+# Linux: tar -xJf x64-linux-with-qt6.tar.xz
+# Windows: 7z x x64-windows-with-qt6.7z
 cmake -S . -B build \
   -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake \
   -DVCPKG_INSTALLED_DIR=/absolute/path/to/installed \
@@ -131,8 +158,8 @@ cmake -S . -B build \
 Alternatively, extract the binary-cache archive and set an absolute cache path:
 
 ```sh
-# Linux: tar -xJf binary-cache.tar.xz
-# Windows: 7z x binary-cache.7z
+# Linux: tar -xJf x64-linux-with-qt6-binary-cache.tar.xz
+# Windows: 7z x x64-windows-with-qt6-binary-cache.7z
 export VCPKG_BINARY_SOURCES='clear;files,/absolute/path/to/binary-cache,read'
 ```
 
@@ -171,9 +198,13 @@ cd prebuilt-vcpkg-binaries
 # Windows: .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
 # Linux:
 ./vcpkg/bootstrap-vcpkg.sh -disableMetrics
-bash scripts/build.sh x64-linux
+# Second argument: none, qt5 (default), or qt6.
+bash scripts/build.sh x64-linux qt6
+# Windows Release-only static Qt 6:
+# bash scripts/build.sh x64-windows-static-release qt6
 ```
 
 On Windows, run the shell scripts with Git Bash after bootstrapping vcpkg.
 Linux prerequisites for Ubuntu are listed in `scripts/linux-prerequisites.sh`.
-Generated files stay in `.work/` and `artifacts/`.
+Generated files stay in `.work/<target>/<qt_version>/` and
+`artifacts/<target>/<qt_version>/`.

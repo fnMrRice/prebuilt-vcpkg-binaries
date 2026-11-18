@@ -154,45 +154,6 @@
           "host": true
         }
       ]
-    },
-    "qt6": {
-      "description": "enable qt6 libraries",
-      "dependencies": [
-        {
-          "name": "qtbase",
-          "features": [
-            "vulkan"
-          ]
-        },
-        {
-          "name": "qtbase",
-          "features": [
-            "windeployqt"
-          ],
-          "platform": "windows"
-        },
-        {
-          "name": "qtbase",
-          "features": [
-            "wayland"
-          ],
-          "platform": "linux | osx"
-        },
-        {
-          "name": "qttools",
-          "default-features": false,
-          "features": [
-            "designer",
-            "linguist"
-          ],
-          "host": true
-        },
-        "qtlottie",
-        "qtmultimedia",
-        "qtnetworkauth",
-        "qtshadertools",
-        "qttranslations"
-      ]
     }
   }
 }

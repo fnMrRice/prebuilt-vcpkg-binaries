@@ -1,0 +1,124 @@
+{
+  "name": "prebuilt-public-dependencies-qt6",
+  "version": "1.0.0",
+  "dependencies": [
+    {
+      "name": "ffmpeg",
+      "default-features": false,
+      "features": [
+        "avcodec",
+        "avformat",
+        "swresample",
+        "vulkan"
+      ]
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "vaapi"
+      ],
+      "platform": "linux"
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "qsv"
+      ],
+      "platform": "(windows | linux) & (x64 | x86) & !uwp"
+    },
+    {
+      "name": "ffmpeg",
+      "features": [
+        "nvcodec"
+      ],
+      "platform": "linux | (!osx & !uwp & !(arm64 & windows))"
+    },
+    "gtest",
+    "benchmark",
+    "cmakerc",
+    "json-schema-validator",
+    "nlohmann-json",
+    "simdjson",
+    "protobuf",
+    "rapidxml-ns",
+    "bext-sml",
+    "rapidjson",
+    "sqlite3",
+    "spdlog",
+    "fmt",
+    "libde265",
+    "openssl",
+    "pthreads",
+    "boost-beast",
+    "boost-filesystem",
+    "boost-thread",
+    "boost-utility",
+    "boost-uuid",
+    "boost-lockfree",
+    "boost-locale",
+    "boost-asio",
+    "cppzmq",
+    "glaze",
+    "ireader-sdk",
+    "ireader-media-server",
+    "sdl3",
+    "glm",
+    "glew",
+    "vulkan",
+    {
+      "name": "glslang",
+      "host": true,
+      "features": [
+        "tools"
+      ]
+    },
+    {
+      "name": "libhv",
+      "features": [
+        "ssl"
+      ]
+    }
+  ],
+  "default-features": [
+    "qt6"
+  ],
+  "features": {
+    "qt6": {
+      "description": "Qt 6 libraries and host tools",
+      "dependencies": [
+        {
+          "name": "qtbase",
+          "features": [
+            "vulkan"
+          ]
+        },
+        {
+          "name": "qtbase",
+          "features": [
+            "windeployqt"
+          ],
+          "platform": "windows"
+        },
+        {
+          "name": "qtbase",
+          "features": [
+            "wayland"
+          ],
+          "platform": "linux | osx"
+        },
+        {
+          "name": "qttools",
+          "default-features": false,
+          "features": [
+            "designer",
+            "linguist"
+          ],
+          "host": true
+        },
+        "qtmultimedia",
+        "qtshadertools",
+        "qttranslations"
+      ]
+    }
+  }
+}

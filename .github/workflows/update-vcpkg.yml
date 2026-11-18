@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          git add vcpkg manifests/default/vcpkg-configuration.json manifests/win7/vcpkg-configuration.json
+          git add vcpkg manifests/*/vcpkg-configuration.json
           if git diff --cached --quiet; then
             echo 'vcpkg and public baselines are already up to date.' >> "$GITHUB_STEP_SUMMARY"
             exit 0
