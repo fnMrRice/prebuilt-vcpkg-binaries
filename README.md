@@ -51,6 +51,10 @@ button to appear. Artifacts expire after 30 days. Completed binary packages are
 cached even when a later port fails, so another manual run can reuse them.
 Source archives and downloaded build tools are cached separately by OS and architecture.
 Build trees and staging packages are cleaned; download archives are retained.
+CI places build trees in `$RUNNER_TEMP/b` and staging packages in `$RUNNER_TEMP/p`
+via `--x-buildtrees-root` and `--x-packages-root`. Keeping these paths short avoids
+Qt 5/qmake forwarding-header paths reaching Windows' legacy path limit. Failure
+logs are collected from the relocated build tree.
 GitHub normally evicts caches after seven days without access, or when the
 repository cache quota requires eviction. Artifact retention is independent.
 
@@ -207,4 +211,6 @@ bash scripts/build.sh x64-linux qt6
 On Windows, run the shell scripts with Git Bash after bootstrapping vcpkg.
 Linux prerequisites for Ubuntu are listed in `scripts/linux-prerequisites.sh`.
 Generated files stay in `.work/<target>/<qt_version>/` and
-`artifacts/<target>/<qt_version>/`.
+`artifacts/<target>/<qt_version>/`. For Windows Qt 5 builds, choose short absolute
+paths for `PREBUILT_BUILDTREES_ROOT` and `PREBUILT_PACKAGES_ROOT`, such as `C:/b`
+and `C:/p`; the build script passes these overrides to vcpkg.

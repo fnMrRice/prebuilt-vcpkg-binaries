@@ -27,7 +27,9 @@ native_path() {
 }
 work=${PREBUILT_WORK_DIR:-$root/.work/$profile/$qt_version}
 destination="$root/artifacts/$profile/$qt_version"
-mkdir -p "$work/binary-cache" "$work/installed" "$work/downloads" "$destination"
+buildtrees=${PREBUILT_BUILDTREES_ROOT:-$work/buildtrees}
+packages=${PREBUILT_PACKAGES_ROOT:-$work/packages}
+mkdir -p "$work/binary-cache" "$work/installed" "$work/downloads" "$buildtrees" "$packages" "$destination"
 export VCPKG_ROOT=$(native_path "$root/vcpkg")
 export VCPKG_DOWNLOADS=$(native_path "$work/downloads")
 export VCPKG_BINARY_SOURCES="clear;files,$(native_path "$work/binary-cache"),readwrite"
@@ -40,7 +42,9 @@ if [[ "$triplet" == *windows* ]]; then vcpkg="$vcpkg.exe"; fi
 if [[ ! -s "$vcpkg" ]]; then echo 'Bootstrap the vcpkg submodule before building.' >&2; exit 2; fi
 args=(install "--triplet=$triplet" "--host-triplet=$host"
       "--x-manifest-root=$(native_path "$root/manifests/$manifest")"
-      "--x-install-root=$(native_path "$work/installed")" --x-no-default-features --clean-buildtrees-after-build --clean-packages-after-build)
+      "--x-install-root=$(native_path "$work/installed")"
+      "--x-buildtrees-root=$(native_path "$buildtrees")"
+      "--x-packages-root=$(native_path "$packages")" --x-no-default-features --clean-buildtrees-after-build --clean-packages-after-build)
 if [[ "$qt_version" != none ]]; then
   args+=("--x-feature=$qt_version")
 fi
@@ -49,6 +53,7 @@ if [[ "$profile" == x64-windows-v142 ]]; then
 fi
 printf 'Building %s (%s) with target %s and host %s\n' "$profile" "$qt_version" "$triplet" "$host"
 {
+  printf 'Build trees: %s\nPackage staging: %s\n' "$(native_path "$buildtrees")" "$(native_path "$packages")"
   printf 'Compiler tracking: disabled (VCPKG_FEATURE_FLAGS=%s)\n' "$VCPKG_FEATURE_FLAGS"
   printf 'Binary cache archives available before install: %s\n' "$(find "$work/binary-cache" -type f -name '*.zip' | wc -l | tr -d '[:space:]')"
   "$vcpkg" "${args[@]}"

@@ -93,9 +93,18 @@ jobs:
           QT_VERSION: ${{ matrix.qt_version }}
         run: |
           work="$RUNNER_TEMP/prebuilt-vcpkg/$BUILD_PROFILE/$QT_VERSION"
-          mkdir -p "$work/binary-cache" "$work/downloads"
-          if command -v cygpath >/dev/null 2>&1; then work=$(cygpath -m "$work"); fi
+          # Qt 5/qmake forwarding headers require short paths on Windows.
+          buildtrees="$RUNNER_TEMP/b"
+          packages="$RUNNER_TEMP/p"
+          mkdir -p "$work/binary-cache" "$work/downloads" "$buildtrees" "$packages"
+          if command -v cygpath >/dev/null 2>&1; then
+            work=$(cygpath -m "$work")
+            buildtrees=$(cygpath -m "$buildtrees")
+            packages=$(cygpath -m "$packages")
+          fi
           echo "PREBUILT_WORK_DIR=$work" >> "$GITHUB_ENV"
+          echo "PREBUILT_BUILDTREES_ROOT=$buildtrees" >> "$GITHUB_ENV"
+          echo "PREBUILT_PACKAGES_ROOT=$packages" >> "$GITHUB_ENV"
       - name: Restore source and tool downloads
         id: downloads
         uses: actions/cache/restore@v5
@@ -159,7 +168,7 @@ jobs:
           name: logs-${{ matrix.archive_name }}
           path: |
             artifacts/${{ matrix.profile }}/${{ matrix.qt_version }}/*.log
-            vcpkg/buildtrees/**/*.log
+            ${{ env.PREBUILT_BUILDTREES_ROOT }}/**/*.log
             ${{ env.PREBUILT_WORK_DIR }}/installed/vcpkg/issue_body.md
           if-no-files-found: ignore
           retention-days: 7
