@@ -28,8 +28,9 @@ The Windows 7 manifest and compiler flags do not replace runtime compatibility t
 2. Select a target, or `all` to build all four targets.
 3. Download the `prebuilt-<target>-<run id>` artifact after the job succeeds.
 
-Only `workflow_dispatch` is enabled. Pushes, pull requests, releases, and schedules
-do not start builds. The default selection builds one target. A run may take
+The prebuild workflow only enables `workflow_dispatch`. Pushes, pull requests,
+releases, and schedules do not start builds. The default selection builds one target.
+A run may take
 several hours, especially when Qt and FFmpeg are not yet cached.
 
 The workflow must be present on the repository's default branch for the manual
@@ -39,6 +40,21 @@ Source archives and downloaded build tools are cached separately by OS and archi
 Build trees and staging packages are cleaned; download archives are retained.
 GitHub normally evicts caches after seven days without access, or when the
 repository cache quota requires eviction. Artifact retention is independent.
+
+## Monthly dependency updates
+
+**Update vcpkg baseline** runs on the first day of every month at 09:17 Hong Kong
+time (01:17 UTC), and can also be started manually from Actions. It checks out the
+repository's default branch, advances the vcpkg submodule to the latest upstream
+`master` commit, and sets both manifests' public default-registry baselines to the
+same commit. Changes are committed directly to the default branch; an unchanged
+baseline produces no commit.
+
+The updater preserves the separate Windows 7 Boost registry baseline, explicit
+package overrides, and all overlay source pins and patches. It does not compile
+packages or start the prebuild workflow. No additional token secret is required;
+the job uses `GITHUB_TOKEN` with `contents: write`. Branch protection must allow
+this workflow to push to the default branch.
 
 ## Packages
 
