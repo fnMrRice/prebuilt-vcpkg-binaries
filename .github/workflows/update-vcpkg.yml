@@ -2,8 +2,8 @@ name: Update vcpkg baseline
 
 "on":
   schedule:
-    # First day of each month at 09:17 Hong Kong time (01:17 UTC).
-    - cron: '17 1 1 * *'
+    # Every Sunday at 09:17 Hong Kong time (01:17 UTC).
+    - cron: '17 1 * * 0'
   workflow_dispatch:
 
 permissions:

@@ -58,9 +58,9 @@ logs are collected from the relocated build tree.
 GitHub normally evicts caches after seven days without access, or when the
 repository cache quota requires eviction. Artifact retention is independent.
 
-## Monthly dependency updates
+## Weekly dependency updates
 
-**Update vcpkg baseline** runs on the first day of every month at 09:17 Hong Kong
+**Update vcpkg baseline** runs every Sunday at 09:17 Hong Kong
 time (01:17 UTC), and can also be started manually from Actions. It checks out the
 repository's default branch, advances the vcpkg submodule to the latest upstream
 `master` commit, and sets all manifests' public default-registry baselines to the
